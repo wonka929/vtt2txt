@@ -11,9 +11,9 @@ remove_tags() {
         -e '/^\s*$/d'
 }
 
-# Funzione per rimuovere l'header del file VTT
-remove_header() {
-    awk '/##|Language: en/{flag=1; next} flag'
+# Funzione per rimuovere righe con timestamp (-->)
+remove_timestamps() {
+    sed '/-->/d'
 }
 
 # Funzione per rimuovere i tag <c>
@@ -21,14 +21,14 @@ remove_c_tags() {
     sed -e 's/<c>//g'
 }
 
+# Funzione per rimuovere l'header del file VTT
+remove_header() {
+    awk '/WEBVTT/{flag=1; next} /Kind: captions/{flag=1; next} /Language: en/{flag=1; next} flag'
+}
+
 # Funzione per rimuovere righe duplicate consecutive
 remove_consecutive_duplicates() {
     awk '!seen[$0]++'
-}
-
-# Funzione per rimuovere righe di timestamp
-remove_timestamps() {
-    sed -e '/^[0-9]\{2\}:[0-9]\{2\}$/d'
 }
 
 # Funzione per unire le righe corte
@@ -58,12 +58,12 @@ main() {
 
     # Leggi il file, esegui i passaggi e salva l'output
     cat "$vtt_file_name" |
-        remove_tags |                     # Rimozione tag
         remove_header |                   # Rimozione dell'header
-        remove_c_tags |                   # Rimozione tag <c>
+        remove_timestamps |               # Rimozione timestamps
+        remove_tags |                     # Rimozione tag
+        remove_c_tags |                   # Rimozione c tags
         remove_consecutive_duplicates |   # Rimozione dei duplicati
-        remove_timestamps |               # Rimozione dei timestamp
-        merge_short_lines > "$txt_name"  # Unione delle righe corte
+        merge_short_lines > "$txt_name"   # Unione delle righe corte
 }
 
 # Verifica che un file sia stato fornito come argomento
